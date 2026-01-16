@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Kur’ân PWA v1.9</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">ق</div>
+      <div class="titles">
+        <div class="app-title">Kur’ân</div>
+        <div class="app-subtitle">Modern • Türkçe • Ayet + Sayfa • v1.9</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnContinue" class="btn ghost" title="Kaldığın yer">⤴︎</button>
+      <button id="btnBookmarks" class="btn ghost" title="Yer imleri">🔖</button>
+      <button id="btnOfflineMgr" class="btn ghost" title="Offline yöneticisi">⬇</button>
+      <button id="btnTheme" class="btn ghost" title="Tema">🌙</button>
+      <button id="btnAbout" class="btn ghost" title="Kaynaklar">ⓘ</button>
+    </div>
+  </header>
+
+  <section class="controls">
+    <div class="row">
+      <div class="field">
+        <label>Sure</label>
+        <select id="surahSelect"></select>
+      </div>
+
+      <div class="field">
+        <label>Görünüm</label>
+        <div class="segmented">
+          <button id="viewAyah" class="seg active">Ayet</button>
+          <button id="viewPage" class="seg">Sayfa</button>
+        </div>
+      </div>
+
+      <div class="field" id="pageField" hidden>
+        <label>Sayfa</label>
+        <div class="pageNav">
+          <button id="prevPage" class="btn small">◀</button>
+          <select id="pageSelect"></select>
+          <button id="nextPage" class="btn small">▶</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">
+        <label>Meal (Türkçe)</label>
+        <select id="translationSelect"></select>
+        <div id="packWarning" class="hint" hidden>
+          Bu meal için bu surede <b>offline okuma paketi</b> yok. “Metin+Meal indir” ile hazırlayabilirsiniz.
+        </div>
+      </div>
+
+      <div class="field grow">
+        <label>Kâri (Tilavet)</label>
+        <select id="reciterSelect"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">
+        <label>Arama</label>
+        <div class="searchRow">
+          <select id="searchScope">
+            <option value="surah">Sadece seçili sure</option>
+            <option value="all">Tüm Kur’ân (meal)</option>
+          </select>
+          <input id="searchInput" class="input" placeholder="Örn: rahmet, sabır, iman..." />
+        </div>
+        <div id="searchHint" class="hint" hidden>
+          Tüm Kur’ân araması için meal verisi ilk kullanımda indirilecek ve cihazda saklanacaktır.
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Yazı boyutu</label>
+        <input id="fontSize" type="range" min="18" max="42" value="30" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">
+        <label>Ezber / Tekrar modu</label>
+        <div class="repeatGrid">
+          <div>
+            <div class="muted tiny">Başlangıç</div>
+            <input id="repStart" type="number" min="1" value="1" />
+          </div>
+          <div>
+            <div class="muted tiny">Bitiş</div>
+            <input id="repEnd" type="number" min="1" value="7" />
+          </div>
+          <div>
+            <div class="muted tiny">Tekrar</div>
+            <input id="repCount" type="number" min="1" max="50" value="3" />
+          </div>
+          <div>
+            <div class="muted tiny">Bekleme (sn)</div>
+            <input id="repDelay" type="number" min="0" max="10" value="1" />
+          </div>
+          <div class="repeatBtns">
+            <button id="btnRepeat" class="btn">⟲ Başlat</button>
+            <button id="btnStop" class="btn ghost">■ Durdur</button>
+          </div>
+          <div class="toggles">
+            <label class="chk"><input id="hideTr" type="checkbox" /> Meali gizle</label>
+            <label class="chk"><input id="hideAr" type="checkbox" /> Arapçayı gizle</label>
+          </div>
+        </div>
+        <div class="muted tiny" style="margin-top:6px">
+          İpucu: iOS’ta ses oynatma kullanıcı etkileşimiyle başlar. “⟲ Başlat” veya “▶ Dinle” ile başlatın.
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">
+        <label>Offline (v1.9: Kuyruk + Cüzler + Paralel)</label>
+        <div class="offlineRow">
+          <button id="btnDownloadAudio" class="btn">⬇ Ses indir (bu sure)</button>
+          <button id="btnClearAudio" class="btn ghost">🧹 Ses sil</button>
+        </div>
+        <div class="offlineRow" style="margin-top:10px">
+          <button id="btnDownloadText" class="btn">⬇ Metin+Meal indir (bu sure)</button>
+          <button id="btnClearText" class="btn ghost">🧹 Metin+Meal sil</button>
+        </div>
+        <div class="offlineRow" style="margin-top:10px">
+          <button id="btnDownloadAllText" class="btn">⬇ Tüm Kur’ân Metin+Meal indir</button>
+          <button id="btnCancelAllText" class="btn ghost" disabled>✋ İptal</button>
+          <button id="btnClearAllText" class="btn ghost">🧹 Tüm Kur’ân Metin+Meal sil</button>
+        </div>
+
+        <div class="offlineRow" style="margin-top:10px">
+          <button id="btnDownloadAllAudio" class="btn">⬇ Tüm Kur’ân Ses indir (kâri)</button>
+          <button id="btnPauseAllAudio" class="btn ghost" disabled>⏸ Duraklat</button>
+          <button id="btnResumeAllAudio" class="btn ghost" disabled>▶ Devam</button>
+          <button id="btnCancelAllAudio" class="btn ghost" disabled>✋ İptal</button>
+          <button id="btnClearAllAudio" class="btn ghost">🧹 Tüm Kur’ân Ses sil (kâri)</button>
+        </div>
+
+        <div class="offlineRow" style="margin-top:10px">
+          <select id="juzSelect" style="min-width:140px"></select>
+          <button id="btnDownloadJuzAudio" class="btn">⬇ Cüz Ses indir</button>
+          <button id="btnPauseJuzAudio" class="btn ghost" disabled>⏸ Duraklat</button>
+          <button id="btnResumeJuzAudio" class="btn ghost" disabled>▶ Devam</button>
+          <button id="btnCancelJuzAudio" class="btn ghost" disabled>✋ İptal</button>
+          <button id="btnClearJuzAudio" class="btn ghost">🧹 Cüz Ses sil</button>
+        </div>
+
+        <div class="offlineRow" style="margin-top:10px">
+          <button id="btnEnqueueAllJuzAudio" class="btn">📥 Tüm Cüzleri Kuyruğa Ekle</button>
+          <button id="btnCancelAllJuzJobs" class="btn ghost">✋ Tüm Cüz İşlerini İptal Et</button>
+        </div>
+        <div id="allJuzSummary" class="hint" hidden></div>
+
+        <div id="dlStatus" class="dlStatus" hidden>
+          <div class="bar"><div id="dlBar" class="barFill"></div></div>
+          <div id="dlText" class="muted" style="margin-top:8px">Hazırlanıyor…</div>
+        </div>
+
+        <div id="txtStatus" class="dlStatus" hidden>
+          <div class="bar"><div id="txtBar" class="barFill"></div></div>
+          <div id="txtText" class="muted" style="margin-top:8px">Hazırlanıyor…</div>
+        </div>
+
+        <div id="allTxtStatus" class="dlStatus" hidden>
+          <div class="bar"><div id="allTxtBar" class="barFill"></div></div>
+          <div id="allTxtText" class="muted" style="margin-top:8px">Hazırlanıyor…</div>
+        </div>
+
+        <div id="allAudStatus" class="dlStatus" hidden>
+          <div class="bar"><div id="allAudBar" class="barFill"></div></div>
+          <div id="allAudText" class="muted" style="margin-top:8px">Hazırlanıyor…</div>
+        </div>
+
+        <div id="juzAudStatus" class="dlStatus" hidden>
+          <div class="bar"><div id="juzAudBar" class="barFill"></div></div>
+          <div id="juzAudText" class="muted" style="margin-top:8px">Hazırlanıyor…</div>
+        </div>
+
+        <div id="offlineBadge" class="hint" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <main class="content">
+    <div id="status" class="status">Yükleniyor…</div>
+    <div id="list" class="list"></div>
+  </main>
+
+  <!-- Bookmarks Modal -->
+  <dialog id="bmDialog" class="modal">
+    <div class="modal-header">
+      <div>
+        <h3>Yer İmleri</h3>
+        <p class="muted">Kaydedilen ayetler (cihazda saklanır).</p>
+      </div>
+      <button id="closeBm" class="btn ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="bmList" class="list"></div>
+    </div>
+  </dialog>
+
+  <!-- Offline Manager Modal -->
+  <dialog id="offDialog" class="modal">
+    <div class="modal-header">
+      <div>
+        <h3>Offline Yöneticisi</h3>
+        <p class="muted">Ses paketleri (Cache) + Okuma paketleri (Metin+Meal) • Boyutlar yaklaşık gösterilir.</p>
+      </div>
+      <button id="closeOff" class="btn ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card">
+        <div class="tools" style="justify-content:space-between; align-items:center">
+          <button id="btnRefreshSizes" class="btn">📏 Boyutları yenile</button>
+          <button id="btnRefreshQuota" class="btn">💾 Depolama durumunu yenile</button>
+          <button id="btnClearAllOfflineAudio" class="btn ghost">🧹 Tüm offline SES paketlerini sil</button>
+          <button id="btnClearAllOfflineText" class="btn ghost">🧹 Tüm offline OKUMA paketlerini sil</button>
+        </div>
+        <div id="sizeSummary" class="hint" style="margin-top:10px" hidden></div>
+        <div id="quotaSummary" class="hint" style="margin-top:6px" hidden></div>
+
+        <div class="tools" style="margin-top:10px; gap:10px; flex-wrap:wrap">
+          <div style="min-width:240px">
+            <label class="muted tiny" style="display:block; margin-bottom:6px">Eşzamanlı indirme (job) sayısı</label>
+            <select id="maxConcurrentDownloads">
+              <option value="1">1 (Güvenli)</option>
+              <option value="2">2 (Önerilen)</option>
+              <option value="3">3 (Hızlı)</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="chk" style="margin-top:10px; display:flex; gap:8px; align-items:center">
+          <input id="autoResumeJobs" type="checkbox" /> Uygulama açılınca indirmeleri otomatik devam ettir (Wi‑Fi uyarılı)
+        </label>
+        <label class="chk" style="margin-top:10px; display:flex; gap:8px; align-items:center">
+          <input id="wifiOnlyDownloads" type="checkbox" /> Büyük indirmeler sadece Wi‑Fi ile çalışsın (zorunlu)
+        </label>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 8px">Ses Paketleri</h4>
+        <div id="offAudioList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <div class="tools" style="justify-content:space-between; align-items:center; margin-bottom:8px">
+          <h4 style="margin:0">Okuma Paketleri (Metin+Meal)</h4>
+          <div style="min-width: 320px">
+            <select id="textPackFilter"></select>
+          </div>
+        </div>
+        <div id="offTextList" class="list"></div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin:0 0 8px">İndirme Kuyruğu</h4>
+        <div id="jobList" class="list"></div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Global search download modal -->
+  <dialog id="dlQDialog" class="modal">
+    <div class="modal-header">
+      <div>
+        <h3>Arama verisi indiriliyor</h3>
+        <p class="muted">Seçili Türkçe meal, tüm Kur’ân için cihazınıza kaydediliyor.</p>
+      </div>
+      <button id="closeDlQ" class="btn ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="bar"><div id="qBar" class="barFill"></div></div>
+      <div id="qText" class="muted" style="margin-top:10px">Başlıyor…</div>
+    </div>
+  </dialog>
+
+  <!-- About Modal -->
+  <dialog id="aboutDialog" class="modal">
+    <div class="modal-header">
+      <div>
+        <h3>Kaynaklar & Atıflar</h3>
+        <p class="muted">Bu uygulama v1.9, metin/meal/ses verisini API’lerden çeker ve offline için önbellekler.</p>
+      </div>
+      <button id="closeAbout" class="btn ghost">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card">
+        <h4>API</h4>
+        <p class="muted">alquran.cloud API uç noktaları: Surah / Quran / Juz.</p>
+      </div>
+      <div class="card">
+        <h4>Not</h4>
+        <p class="muted">Paralel indirme sayısını 2 öneriyoruz. iOS arka planda indirmeyi durdurabilir; bu nedenle işler yeniden açılışta “paused” olabilir.</p>
+      </div>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
